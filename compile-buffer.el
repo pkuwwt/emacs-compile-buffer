@@ -100,6 +100,17 @@
 "A list of pairs (pattern, flags), where the pattern is used to search,
 and the flags is used in complilation."
   )
+(defvar CB-script-ext-program-map '(
+			("py" "python")
+			("sh" "bash")
+			("r" "Rscript")
+			("pl" "perl")
+			("rb" "ruby")
+			("tcl" "tcl")
+			("lua" "lua")
+			)
+  "The map from extensions to the interpretation program"
+  )
 (defun CB-clear-lib-pattern-flags()
   "Clear CB-libs-pattern-flags, which is used to parse C/CPP libs"
   (setq CB-libs-pattern-flags '())
@@ -123,6 +134,7 @@ which is used to parse C/CPP libs"
 	  ((string= ext "h") "c-header")
 	  ((string= ext "hpp") "cpp-header")
 	  ((string= ext "hxx") "cpp-header")
+	  (t ext)
 	  )
     )
   )
@@ -351,6 +363,24 @@ but current position is not changed"
 (defun CB-run-buffer-as-elisp()
     (eval-buffer)
   )
+(defun CB-run-buffer-as-script()
+  (let* ((src (buffer-file-name))
+	 (ext (file-name-extension src))
+	(buffer CB-running-buffer)
+	(ext-prog-map CB-script-ext-program-map)
+	)
+    (CB-show-and-clear-buffer buffer)
+    (CB-message-list-to-buffer buffer (format "Running %s" src))
+    (while ext-prog-map
+      (if (string= ext (nth 0 (car ext-prog-map)))
+	  (CB-shell-command-to-buffer
+	   buffer
+	   (format "%s %s" (nth 1 (car ext-prog-map)) src))
+	  )
+      (setq ext-prog-map (cdr ext-prog-map))
+      )
+    )
+  )
 (defun CB-compile-buffer()
   "compile current source file according to the postfix."
   (interactive)
@@ -362,9 +392,8 @@ but current position is not changed"
 	  ((string= filetype "cpp-header") (CB-compile-buffer-as-ccpp-header))
 	  ((string= filetype "c") (CB-compile-buffer-as-ccpp))
 	  ((string= filetype "c-header") (CB-compile-buffer-as-ccpp-header))
-	  ((string= filetype "python") (CB-run-buffer-as-python))
 	  ((string= filetype "java") (CB-compile-buffer-as-java))
-	  ((string= filetype "el") (CB-run-buffer-as-elisp))
+	  (t (CB-run-buffer-as-script))
 	  )
     )
   )
@@ -373,12 +402,15 @@ but current position is not changed"
 If the source file need to be compiled, you should use
 CB-compile-buffer first."
   (interactive)
-  (let* ((filetype (CB-get-buffer-filetype)))
+  (let* (
+	 (filetype (CB-get-buffer-filetype))
+	 (ext (file-name-extension (buffer-file-name)))
+	 )
     (cond ((string= filetype "cpp") (CB-run-buffer-as-cpp))
 	  ((string= filetype "c") (CB-run-buffer-as-cpp))
-	  ((string= filetype "python") (CB-run-buffer-as-python))
 	  ((string= filetype "java") (CB-run-buffer-as-java))
 	  ((string= filetype "el") (CB-run-buffer-as-elisp))
+	  (t (CB-run-buffer-as-script))
 	  )
     )
   )
