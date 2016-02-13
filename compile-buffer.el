@@ -440,7 +440,10 @@ but current position is not changed"
 	 (CB-dir-contain-file dir "makefile")
 	 (CB-dir-contain-file dir "Makefile")
 	 )
-	(CB-shell-command-to-buffer buffer "make -k")
+	(progn
+	  (CB-show-and-clear-buffer buffer)
+	  (CB-shell-command-to-buffer buffer "make -k")
+	  )
       (if (CB-buffer-contains-regexp-or-group "\\begin.*document" "\\end.*document")
 	  (progn
 	    (CB-show-and-clear-buffer buffer)
