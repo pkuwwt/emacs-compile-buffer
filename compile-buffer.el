@@ -386,4 +386,4 @@ CB-compile-buffer first."
 (global-set-key (kbd "<f5>") 'CB-compile-buffer)
 (global-set-key (kbd "<f6>") 'CB-run-buffer)
 
-;;; compile-source.el ends here
+;;; compile-buffer.el ends here
