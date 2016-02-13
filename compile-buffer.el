@@ -111,6 +111,8 @@ and the flags is used in complilation."
 			)
   "The map from extensions to the interpretation program"
   )
+(defvar CB-pdf-viewer "evince")
+
 (defun CB-clear-lib-pattern-flags()
   "Clear CB-libs-pattern-flags, which is used to parse C/CPP libs"
   (setq CB-libs-pattern-flags '())
@@ -190,6 +192,32 @@ but current position is not changed"
     (save-match-data
       (goto-char (point-min))
       (search-forward-regexp re nil t))))
+(defun CB-buffer-contains-regexp-or-group(re &rest res)
+  "RETURN t if any argument is contained in buffer"
+  (let* ((result (CB-buffer-contains-regexp re)))
+    (while res
+      (setq result
+	    (or result
+		(CB-buffer-contains-regexp (car res))))
+      (setq res (cdr res))
+      )
+    result
+    )
+  )
+(defun CB-buffer-contains-regexp-and-group(re &rest res)
+  "RETURN t if all arguments are contained in buffer"
+  (let* (
+	 (result (CB-buffer-contains-regexp re))
+	 )
+    (while (and result res)
+      (setq result
+	    (and result
+		 (CB-buffer-contains-regexp (car res))))
+      (setq res (cdr res))
+      )
+    result
+    )
+  )
 (defun CB-matching-lines-as-list(re)
   "Get all matched lines as a list"
   (let* ((result-list '())
@@ -384,18 +412,64 @@ but current position is not changed"
       )
     )
   )
+(defun CB-dir-contain-file(dir filename)
+  "if the list of files in dir contains filename"
+  (let* ( (file-list (directory-files dir)) )
+    (member filename file-list)
+    )
+  )
+(defun CB-compile-buffer-as-latex()
+  (let* ((latex "pdflatex")
+	 (src (buffer-file-name))
+	 (base (file-name-base src))
+	 (dir (file-name-directory src))
+	 (buffer CB-compiling-buffer)
+	 (command (format "%s %s" latex src))
+	 )
+    (if (CB-buffer-contains-regexp-or-group "xeCJK" "xelatex")
+	(progn
+	  (setq latex "xelatex")
+	  (setq command (format "%s %s" latex src))
+	  )
+	)
+    (if (CB-buffer-contains-regexp "cite")
+	(setq command (format "%s;bibtex %s.aux;%s;%s" command base command command))
+	(setq command (format "%s;%s;%s" command command command))
+      )
+    (if (or
+	 (CB-dir-contain-file dir "makefile")
+	 (CB-dir-contain-file dir "Makefile")
+	 )
+	(CB-shell-command-to-buffer buffer "make -k")
+      (if (CB-buffer-contains-regexp-or-group "\\begin.*document" "\\end.*document")
+	  (progn
+	    (CB-show-and-clear-buffer buffer)
+	    (CB-message-list-to-buffer buffer (format "Compiling %s" src))
+	    (CB-shell-command-to-buffer buffer command)
+	    )
+	))))
+(defun CB-run-buffer-as-latex()
+  "open pdf with CB-pdf-viewer"
+  (let* (
+	 (src (buffer-file-name))
+	 (base (file-name-base src))
+	 )
+    (shell-command (format "%s %s.pdf >/dev/null 2>&1 &" CB-pdf-viewer base))
+    )
+  )
 (defun CB-compile-buffer()
   "compile current source file according to the postfix."
   (interactive)
   (save-buffer)
   (let* ((filetype (CB-get-buffer-filetype))
-	(buffer CB-compiling-buffer)
-	)
+	 (buffer CB-compiling-buffer)
+	 )
     (cond ((string= filetype "cpp") (CB-compile-buffer-as-ccpp))
 	  ((string= filetype "cpp-header") (CB-compile-buffer-as-ccpp-header))
 	  ((string= filetype "c") (CB-compile-buffer-as-ccpp))
 	  ((string= filetype "c-header") (CB-compile-buffer-as-ccpp-header))
 	  ((string= filetype "java") (CB-compile-buffer-as-java))
+	  ((string= filetype "tex") (CB-compile-buffer-as-latex))
 	  (t (CB-run-buffer-as-script))
 	  )
     )
@@ -413,6 +487,7 @@ CB-compile-buffer first."
 	  ((string= filetype "c") (CB-run-buffer-as-cpp))
 	  ((string= filetype "java") (CB-run-buffer-as-java))
 	  ((string= filetype "el") (CB-run-buffer-as-elisp))
+	  ((string= filetype "tex") (CB-run-buffer-as-latex))
 	  (t (CB-run-buffer-as-script))
 	  )
     )
