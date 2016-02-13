@@ -8,7 +8,7 @@ Copy `compile-buffer.el` to `~/.emacs.d/site-lisp`, and add following lines in `
     (add-to-list 'load-path "~/.emacs.d/site-lisp/")
     (load "compile-buffer.el")
 
-## Usage
+## Basic Usage
 
   * `<F5>` to compile the buffer
   * `<F6>` to run the result
@@ -45,7 +45,7 @@ And add user-defined pairs by `CB-add-lib-pattern-flags`, for example,
 ### Additional flags for C/CPP
 Although we can configure the flags in `.emacs`, however, there may be occasionally some special dependencies. Thus, we need source-specific configuration.
 
-We can use `// COMPILE_DEPENDS:` to add additional flags, for example
+We can use `// COMPILE_DEPENDS:` to add additional flags in the source code as comments, for example
 
     // COMPILE_DEPENDS: -L/usr/include/GL -lm other_source.cpp
 
