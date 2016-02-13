@@ -5,8 +5,8 @@ Compile buffer with single short-cut
 
 Copy `compile-buffer.el` to `~/.emacs.d/site-lisp`, and add following lines in `~/.emacs`:
 
-  (add-to-list 'load-path "~/.emacs.d/site-lisp/")
-  (load "compile-buffer.el")
+    (add-to-list 'load-path "~/.emacs.d/site-lisp/")
+    (load "compile-buffer.el")
 
 # Usage
 
