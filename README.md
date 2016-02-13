@@ -10,9 +10,8 @@ Copy `compile-buffer.el` to `~/.emacs.d/site-lisp`, and add following lines in `
 
 # Usage
 
-  * `<F5>` to compile
-  * `<F6>` to run
-  * 
+  * `<F5>` to compile the buffer
+  * `<F6>` to run the result
   
 # Advanced usage
 
@@ -50,3 +49,6 @@ We can use `// COMPILE_DEPENDS:` to add additional flags, for example
 
     // COMPILE_DEPENDS: -L/usr/include/GL -lm other_source.cpp
 
+# Limitation
+
+I only focus on `C/CPP` and `python`, and extensions are needed for other programming languages.
