@@ -268,7 +268,7 @@ but current position is not changed"
 	    (string= outext "gch")
 	    )
 	(format " -o %s.%s " out outext)
-      ""
+      " -c "
       )
     )
   )
