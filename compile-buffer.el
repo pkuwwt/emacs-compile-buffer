@@ -152,13 +152,14 @@ which is used to parse C/CPP libs"
 	)
   )
 
-(defun CB-shell-command-to-buffer(buffername command)
+(defun CB-shell-command-to-buffer(buffername command &optional name)
   "Execute command, and display output in a buffer"
   (progn
 	(switch-to-buffer-other-window buffername)
 										;(erase-buffer)
 	(other-window 1)
-	(start-process-shell-command command buffername command)
+	(start-process-shell-command
+	 (if name name command) buffername command)
 	)
   )
 
@@ -296,7 +297,9 @@ but current position is not changed"
 						((string= ext "cpp") "g++")
 						((string= ext "h") "gcc")
 						((string= ext "hpp") "g++"))))
-	(if (CB-buffer-contains-regexp "\\_<class\\_>")
+	(if (or (CB-buffer-contains-regexp "\\_<class\\_>")
+			(CB-buffer-contains-regexp "std::")
+			)
 		(setq command "g++"))
 	command
 	)
@@ -332,10 +335,17 @@ but current position is not changed"
 		 (depends (CB-parse-ccpp-compile-depends))
 		 (command (CB-parse-ccpp-compile-command))
 		 (out (CB-parse-ccpp-compile-output))
+		 (type (CB-get-buffer-filetype))
 		 )
-	(if (not (string= out "-c")) (setq out (format "-o %s" out)))
+	(if (not (string= out "-c"))
+		(setq out (format "-o %s" out))
+	  )
+	(if (or (string= type "c-header")
+			(string= type "cpp-header"))
+		(setq flags (replace-regexp-in-string "-l[a-zA-Z0-9]+" "" flags))
+	  )
 	(format "%s %s %s %s %s" command src depends flags out)
-										;(message (format "%s %s %s %s" command src depends out))
+	;(message (format "%s %s %s %s" command src depends out))
 	)
   )
 (defun CB-compile-buffer-as-ccpp-header()
